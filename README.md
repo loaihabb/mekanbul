@@ -1,9 +1,9 @@
-[1.API Collection Test ](https://github.com/loaihabb/mekanbul/blob/Ödev6/images/API_CollectionTest.png)
+[1.API Test ](https://github.com/loaihabb/mekanbul/blob/Ödev6/images/API_CollectionTest.png)
 
 ![](https://github.com/loaihabb/mekanbul/blob/Ödev6/images/API_CollectionTest.png)
 ----------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------------------
-[2.API Test ](https://github.com/loaihabb/mekanbul/blob/Ödev6/images/API_Test.png)
+[2.API Collection Test ](https://github.com/loaihabb/mekanbul/blob/Ödev6/images/API_Test.png)
 
 ![](https://github.com/loaihabb/mekanbul/blob/Ödev6/images/API_Test.png)
 ----------------------------------------------------------------------------------------------------------------------------------
