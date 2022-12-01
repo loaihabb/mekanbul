@@ -20,7 +20,7 @@ process.on("SIGINT",function(){
 
 
 mongoose.connection.on("connected",function(){
-    console.log(dbURI+"adresindeki veritabanına bağandı.");
+    console.log(dbURI+"adresindeki veritabanına bağlandı.");
 })
 
 
