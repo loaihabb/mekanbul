@@ -1,12 +1,12 @@
 var express = require('express');
 var router = express.Router();
-var ctrlMekanlar = require('../controllers/mekanlar');
-var ctrlDigerleri = require('../controllers/digerleri');
-/* GET home page. */
+var ctrlMekanlar = require('../controllers/mekanlar.js')
+var ctrlDigerleri = require('../controllers/digerleri.js')
 
-//slash'ı görünce function fonksiyonunu çalıştır demek 
+/* GET home page. */
 router.get('/', ctrlMekanlar.anaSayfa);
 router.get('/mekan/:mekanid', ctrlMekanlar.mekanBilgisi);
 router.get('/mekan/yorum/yeni', ctrlMekanlar.yorumEkle);
 router.get('/hakkinda', ctrlDigerleri.hakkinda);
+
 module.exports = router;
