@@ -1,4 +1,4 @@
-[Replit's Link : Enlem & Boylam ](https://mekanbul.loiyhabeeb.repl.co/?enlem=37.8&boylam=35)
+[Replit's Link : Enlem & Boylam ](https://mekanbul-1.loiyhabeeb.repl.co/?enlem=38&boylam=36)
 
 ![](https://github.com/loaihabb/mekanbul/blob/Ödev7/images/EnlemBoylam.png)
 ----------------------------------------------------------------------------------------------------------------------------------
