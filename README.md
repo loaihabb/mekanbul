@@ -1,6 +1,6 @@
 [Replit's Link : Enlem & Boylam ](https://mekanbul-1.loiyhabeeb.repl.co/?enlem=38&boylam=36)
 
-![](https://github.com/loaihabb/mekanbul/blob/Ödev7/images/EnlemBoylam.png)
+![](https://github.com/loaihabb/mekanbul/blob/Ödev8/images/Ödev8.png)
 ----------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------------------
 [1.API Collection Test ](https://github.com/loaihabb/mekanbul/blob/Odev5/images/API_CollectionTest.png)
