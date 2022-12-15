@@ -1,96 +1,129 @@
-var express = require('express');
-var router = express.Router();
+const axios = require("axios")
 
-const anaSayfa = function (req, res, next) {
-  res.render('anasayfa', 
-  {"baslik": "Anasayfa",
-    "sayfaBaslik" : {
-      "siteAd" :"MekanBul",
-      "slogan" : "Civardaki mekanları keşfet!"
-     },
-     "mekanlar" :[
-      {
-        "ad":"Starbucks",
-        "adres":"Sdü Batı Kampüsü",
-        "puan":"4",
-        "mesafe":"2km",
-        "imkanlar":["Kahve "," Tavla " , " Pasta"]
+var apiSecenekleri = {
+  sunucu: "https://mekanbul-1.loiyhabeeb.repl.co",
+  apiYolu: "/api/mekanlar/"
+}
 
-      },
-      {
-        "ad":"Gloria Jeans",
-        "adres":"Sdü Doğu Kampüsü",
-        "puan":"3",
-        "mesafe":"5km",
-        "imkanlar":["Kahve "," Tavla ", " Pasta"]
+var mesafeyiFormatla = function (mesafe) {
+  var yeniMesafe, birim
+  if (mesafe > 1) {
+    yeniMesafe = parseFloat(mesafe).toFixed(1)
+    birim = " km"
+  }
+  else {
+    yeniMesafe = parseInt(mesafe * 1000, 10)
+    birim = " m"
+  }
+  return yeniMesafe + birim
+}
 
-      }
+const anaSayfaOlustur = function (res, mekanListesi) {
+  var mesaj
+  if (!(mekanListesi instanceof Array)) {
+    mesaj = "API hatası!"
+    mekanListesi = []
+  }
+  else {
+    if (!mekanListesi.length) {
+      mesaj = "Civarda herhangi bir mekan bulunamadı."
+    }
+  }
+  res.render("anasayfa", {
+    "baslik": "Anasayfa",
+    "sayfaBaslik": {
+      "siteAd": "Mekanbul",
+      "slogan": "Mekanları Keşfet"
+    },
+    "mekanlar": mekanListesi,
+    "mesaj": mesaj
+  })
+}
 
+const anaSayfa = function (req, res) {
+  axios.get(apiSecenekleri.sunucu + apiSecenekleri.apiYolu, {
+    params: {
+      enlem: req.query.enlem,
+      boylam: req.query.boylam
+    }
+  }).then(function (response) {
+    var i, mekanlar
+    mekanlar = response.data
+    for (i = 0; i < mekanlar.length; i++) {
+      mekanlar[i].mesafe = mesafeyiFormatla(mekanlar[i].mesafe)
+    }
+    anaSayfaOlustur(res, mekanlar)
+  }).catch(function (hata) {
+    anaSayfaOlustur(res, hata)
+  })
+}
 
+const detaySayfasiOlustur = function (res, mekanDetaylari) {
+  mekanDetaylari.koordinat = {
+    "enlem": mekanDetaylari.koordinat[0],
+    "boylam": mekanDetaylari.koordinat[1]
+  }
+  res.render('mekanbilgisi', {
+    mekanBaslik: mekanDetaylari.ad,
+    mekanDetay: mekanDetaylari
+  })
+}
 
-     ]
-   });
+const hataGoster = function (res, hata) {
+  var mesaj
+  if (hata.response.status == 404) {
+    mesaj = "404, Sayfa Bulunamadı!"
+  }
+  else {
+    mesaj = hata.response.status + " hatası"
+  }
+  res.status(hata.response.status)
+  res.render('error', {
+    "mesaj": mesaj
+  })
 }
 
 const mekanBilgisi = function (req, res, next) {
-  res.render('mekanbilgisi',
-  { "baslik": 'Mekan bilgisi',
-    "mekanBaslik" : "Starbucks",
-    "mekanDetay" : {
-     "ad": "Starbucks",
-     "adres" : "Centrum Garden",
-     "puan" : "4",
-     "saatler" : [
-      {
-        "gunler" : "Pazartesi-Cuma",
-        "acilis" : "9:00",
-        "kapanis" : "23:00",
-        "kapali" : false
-      },
-      {
-        "gunler" : "Cumartesi-Pazar",
-        "acilis" : "10:00",
-        "kapanis" : "22:00",
-        "kapali" : false
-      }
-
-     ],
-
-     "imkanlar" : ["Kahve ", " Tavla ", " Çay"],
-     "koordinatlar" : {
-      "enlem": "37.7",
-      "boylam": "30.5"
-     },
-    "yorumlar" :[
-      {
-        "yorumYapan" : " Loiy Habeeb",
-        "puan" :"1",
-        "tarih" :"20 Ekim 2022",
-        "yorumMetni" : "ÇOK BERBAT"
-      },
-      {
-        "yorumYapan" : " Büşra",
-        "puan" :"5",
-        "tarih" :"20 Ekim 2022",
-        "yorumMetni" : "Güzel"
-      }
-    ]
-     
-    }
-
-});
+  axios.get(apiSecenekleri.sunucu + apiSecenekleri.apiYolu + req.params.mekanid)
+    .then(function (response) {
+      req.session.mekanAdi=response.data.ad;
+      detaySayfasiOlustur(res, response.data)
+    })
+    .catch(function (hata) {
+      hataGoster(res, hata)
+    })
 }
 
 const yorumEkle = function (req, res, next) {
-  res.render('yorumekle', { title: 'Yorum Ekle' });
+  var mekanAdi=req.session.mekanAdi;
+  var mekanid=req.params.mekanid;
+  if(!mekanAdi){
+    res.redirect("/mekan/"+mekanid);
+  }else
+  res.render('yorumekle', {baslik:mekanAdi+ " Mekanına Yorum Yap", title: 'Yorum Sayfası' });
 }
 
-
+const yorumumuEkle = function (req, res, next) {
+  var gonderilenYorum,mekanid;
+  mekanid=req.params.mekanid;
+  if(!req.body.adsoyad || !req.body.yorum){
+    res.redirect("/mekan/"+mekanid+"/yorum/yeni?hata=evet");
+  }
+  else{
+    gonderilenYorum={
+      yorumYapan:req.body.adsoyad,
+      yorumMetni:req.body.yorum,
+      puan:req.body.puan
+    }
+    axios.post(apiSecenekleri.sunucu+apiSecenekleri.apiYolu+mekanid+"/yorumlar",gonderilenYorum).then(function(){
+      res.redirect("/mekan/"+mekanid)
+    });
+  }
+};
 
 module.exports = {
-
   anaSayfa,
   mekanBilgisi,
   yorumEkle,
-  
+  yorumumuEkle
 }
