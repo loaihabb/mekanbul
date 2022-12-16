@@ -11,6 +11,17 @@ $('#yorumEkle').submit(function (e) {
    }
  });
 
+ $('#girisYap').submit(function (e) {
+  $('.alert.alert-danger').hide();
+  if (!$('input#name').val()||!$('input#name').val()) {
+    if ($('.alert.alert-danger').length) {
+      $('.alert.alert-danger').show();
+    } else {
+      $(this).prepend('<div role="alert" class="alert alert-danger">Lütfen E-posta ile Şifrenizi yazınız </div>');
+     }
+     return false;
+   }
+ });
 
 $('#mekanEkle').submit(function (e) {
   $('.alert.alert-danger').hide();
