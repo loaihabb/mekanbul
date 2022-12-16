@@ -31,14 +31,14 @@ var ortalamaPuanGuncelle = function (mekanid) {
     });
 }
 
-var yorumOlustur = function (req, res, gelenMekan) {
+var yorumOlustur = function (req, res, gelenMekan, kullaniciAdi) {
     if (!gelenMekan) {
         cevapOlustur(res, 404, {
             mesaj: "mekanid bulunamadı",
         });
     } else {
         gelenMekan.yorumlar.push({
-            yorumYapan: req.body.yorumYapan,
+            yorumYapan: kullaniciAdi,
             puan: req.body.puan,
             yorumMetni: req.body.yorumMetni,
             tarih: Date.now(),
@@ -55,49 +55,83 @@ var yorumOlustur = function (req, res, gelenMekan) {
         });
     }
 };
-
-const yorumEkle = function (req, res) {
-    const mekanid = req.params.mekanid;
-    if (mekanid) {
-        Mekan
-            .findById(mekanid)
-            .select("yorumlar")
-            .exec((hata, gelenMekan) => {
-                if (hata) {
-                    res.status(400).json(hata);
-                } else {
-                    yorumOlustur(req, res, gelenMekan);
+const kullaniciGetir = (req, res, callback) => {
+    if (req.auth && req.auth.eposta) {
+        Kullanici
+            .findOne({ eposta: req.auth.eposta })
+            .exec((hata, kullanici) => {
+                if (!kullanici) {
+                    return res
+                        .status(404)
+                        .json({ "hata": "Kullanıcı bulunamadı!" });
+                } else if (hata) {
+                    return res
+                        .status(404)
+                        .json(hata);
                 }
+                callback(req, res, kullanici.adsoyad);
             });
     } else {
-        res.status(404).json({ mesaj: "Mekan bulunamadı. " });
+        return res
+            .status(404)
+            .json({ "hata": "Kullanıcı bulunamadı!" })
     }
+};
+
+const yorumEkle = function (req, res) {
+    kullaniciGetir(req, res,
+        (req, res, kullaniciAdi) => {
+            const mekanid = req.params.mekanid;
+
+            if (mekanid) {
+                Mekan
+                    .findById(mekanid)
+                    .select("yorumlar")
+                    .exec((hata, gelenMekan) => {
+                        if (hata) {
+                            res.status(400).json(hata);
+                        } else {
+                            yorumOlustur(req, res, gelenMekan, kullaniciAdi);
+                        }
+                    });
+            } else {
+                res.status(404).json({ "hata": "Mekan bulunamadı. " });
+            }
+        })
 };
 
 const yorumSil = function (req, res) {
     if (!req.params.mekanid || !req.params.yorumid) {
-        cevapOlustur(res, 404, {"mesaj": "Bulunamadı. mekanid ve yorumid gerekli"});
-    return;}
+        cevapOlustur(res, 404, { "mesaj": "Bulunamadı. mekanid ve yorumid gerekli" });
+        return;
+    }
     Mekan.findById(req.params.mekanid).select("yorumlar")
-    .exec(function (hata, gelenMekan) {
-        if(!gelenMekan) {cevapOlustur(res, 404, {"mesaj":"mekanid bulunamadı"});
-    return;} else if (hata) {cevapOlustur(res, 404, hata);
-    return;}
-    if (gelenMekan.yorumlar && gelenMekan.yorumlar.length > 0) {
-        if (!gelenMekan.yorumlar.id(req.params.yorumid)) {
-            cevapOlustur(res, 404, {"mesaj": "yorumid bulunamadı"});
-        } else {
-            gelenMekan.yorumlar.id(req.params.yorumid).remove();
-            gelenMekan.save(function (hata,mekan) {
-                if(hata) {cevapOlustur(res, 404, hata);} else {
-                    ortalamaPuanGuncelle(mekan._id);
-                    cevapOlustur(res, 200, {"durum":"yorum silindi"});}});
-        }} else {
-            cevapOlustur(res, 404, {
-                mesaj: "Silinecek yorum bulunamadı",
-            });
-        }
-    });
+        .exec(function (hata, gelenMekan) {
+            if (!gelenMekan) {
+                cevapOlustur(res, 404, { "mesaj": "mekanid bulunamadı" });
+                return;
+            } else if (hata) {
+                cevapOlustur(res, 404, hata);
+                return;
+            }
+            if (gelenMekan.yorumlar && gelenMekan.yorumlar.length > 0) {
+                if (!gelenMekan.yorumlar.id(req.params.yorumid)) {
+                    cevapOlustur(res, 404, { "mesaj": "yorumid bulunamadı" });
+                } else {
+                    gelenMekan.yorumlar.id(req.params.yorumid).remove();
+                    gelenMekan.save(function (hata, mekan) {
+                        if (hata) { cevapOlustur(res, 404, hata); } else {
+                            ortalamaPuanGuncelle(mekan._id);
+                            cevapOlustur(res, 200, { "durum": "yorum silindi" });
+                        }
+                    });
+                }
+            } else {
+                cevapOlustur(res, 404, {
+                    mesaj: "Silinecek yorum bulunamadı",
+                });
+            }
+        });
 };
 
 const yorumGuncelle = function (req, res) {
@@ -178,5 +212,6 @@ module.exports = {
     yorumEkle,
     yorumSil,
     yorumGuncelle,
-    yorumGetir
+    yorumGetir,
+    kullaniciGetir
 }
